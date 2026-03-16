@@ -4,9 +4,15 @@ function index (req, res) {
     const sql = "SELECT * FROM movies";
     connection.query (sql, (err, results) => {
         handleFailedQuery(err, res);
+
+        const movies = results.map((movie) => {
+            const imagePath = imagePathBuilder(movie.image);
+            return {...movie, image: imagePath};
+        })
+
         res.json({
             success: true,
-            results: results
+            results: movies
         });
     })
 }
@@ -23,9 +29,15 @@ function show (req, res) {
             message: "Movie not found."
         });
 
+        const movies = results.map((movie) => {
+            const imagePath = imagePathBuilder(movie.image);
+            return { ...movie, image: imagePath };
+        })
+
+
         res.json({
             success: true,
-            results: results
+            results: movies
         });
     })
 }
@@ -44,6 +56,10 @@ function handleFailedQuery (err,res) {
 
         return res.status(500).json(responseData);
     }
+};
+
+function imagePathBuilder (image) {
+    return `${process.env.APP_URL}:${process.env.APP_PORT}/img/${image}`
 }
 
 module.exports = {index, show};
