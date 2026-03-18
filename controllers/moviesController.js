@@ -1,13 +1,13 @@
 const connection = require("../database/connection");
 
-function index (req, res) {
+function index(req, res) {
     const sql = "SELECT * FROM movies";
-    connection.query (sql, (err, results) => {
+    connection.query(sql, (err, results) => {
         handleFailedQuery(err, res);
 
         const movies = results.map((movie) => {
             const imagePath = imagePathBuilder(movie.image);
-            return {...movie, image: imagePath};
+            return { ...movie, image: imagePath };
         })
 
         res.json({
@@ -17,14 +17,14 @@ function index (req, res) {
     })
 }
 
-function show (req, res) {
+function show(req, res) {
     const id = req.params.id;
 
     const sql = "SELECT * FROM movies WHERE id = ?";
-    connection.query(sql,[id], (err, results) => {
+    connection.query(sql, [id], (err, results) => {
         handleFailedQuery(err, res);
 
-        if(results.length === 0) return res.status(404).json({
+        if (results.length === 0) return res.status(404).json({
             success: false,
             message: "Movie not found."
         });
@@ -34,15 +34,24 @@ function show (req, res) {
             return { ...movie, image: imagePath };
         })
 
+        const reviewsSql = 'SELECT reviews.id, reviews.name, reviews.vote, reviews.text FROM reviews WHERE movie_id = ?';
+        connection.query(reviewsSql, [id], (err, reviewsRes) => {
+            handleFailedQuery(err, res);
 
-        res.json({
-            success: true,
-            results: movies
-        });
+            
+            res.json({
+                success: true,
+                results: movies,
+                reviews: reviewsRes
+            });
+
+        })
+
+
     })
 }
 
-function handleFailedQuery (err,res) {
+function handleFailedQuery(err, res) {
     if (err) {
         const responseData = {
             success: false,
@@ -58,8 +67,8 @@ function handleFailedQuery (err,res) {
     }
 };
 
-function imagePathBuilder (image) {
+function imagePathBuilder(image) {
     return `${process.env.APP_URL}:${process.env.APP_PORT}/img/${image}`
 }
 
-module.exports = {index, show};
+module.exports = { index, show };
