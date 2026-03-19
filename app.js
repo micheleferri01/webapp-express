@@ -12,6 +12,8 @@ app.use(cors({
     origin: process.env.CORS_URL
 }));
 
+app.use(express.json())
+
 app.use(express.static("public"));
 
 app.use("/", moviesRouter);

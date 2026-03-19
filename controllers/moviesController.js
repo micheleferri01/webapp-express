@@ -51,6 +51,20 @@ function show(req, res) {
     })
 }
 
+function reviewStore (req, res) {
+    const {id} = req.params;
+    const {name, text, vote} = req.body;
+    const sql = `INSERT INTO reviews (movie_id, name, text, vote) VALUES (?,?,?,?)`;
+
+    connection.query(sql,[id, name, text, vote],(err, results) => {
+        handleFailedQuery(err, res);
+        res.json({
+            success: true,
+            message: "review posted"
+        })
+    });
+}
+
 function handleFailedQuery(err, res) {
     if (err) {
         const responseData = {
@@ -71,4 +85,4 @@ function imagePathBuilder(image) {
     return `${process.env.APP_URL}:${process.env.APP_PORT}/img/${image}`
 }
 
-module.exports = { index, show };
+module.exports = { index, show, reviewStore};
