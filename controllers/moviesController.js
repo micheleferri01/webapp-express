@@ -1,9 +1,16 @@
 const connection = require("../database/connection");
 
 function index(req, res) {
-    const sql = "SELECT * FROM movies";
+    const sql = `
+    SELECT movies.id, movies.title, movies.director, movies.genre, movies.release_year, movies.abstract, movies.image, ROUND(AVG(reviews.vote)) AS rating 
+    FROM movies 
+    INNER JOIN reviews 
+    ON movies.id = reviews.movie_id 
+    GROUP BY movies.id` ;
     connection.query(sql, (err, results) => {
         handleFailedQuery(err, res);
+
+        // console.log(results);
 
         const movies = results.map((movie) => {
             const imagePath = imagePathBuilder(movie.image);
@@ -20,7 +27,14 @@ function index(req, res) {
 function show(req, res) {
     const id = req.params.id;
 
-    const sql = "SELECT * FROM movies WHERE id = ?";
+    const sql = `
+    SELECT movies.id, movies.title, movies.director, movies.genre, movies.release_year, movies.abstract, movies.image, ROUND(AVG(reviews.vote)) AS rating 
+    FROM movies 
+    INNER JOIN reviews 
+    ON movies.id = reviews.movie_id 
+     WHERE movies.id = ?
+     GROUP BY movies.id`;
+
     connection.query(sql, [id], (err, results) => {
         handleFailedQuery(err, res);
 
@@ -38,7 +52,7 @@ function show(req, res) {
         connection.query(reviewsSql, [id], (err, reviewsRes) => {
             handleFailedQuery(err, res);
 
-            
+
             res.json({
                 success: true,
                 results: movies,
@@ -51,12 +65,12 @@ function show(req, res) {
     })
 }
 
-function reviewStore (req, res) {
-    const {id} = req.params;
-    const {name, text, vote} = req.body;
+function reviewStore(req, res) {
+    const { id } = req.params;
+    const { name, text, vote } = req.body;
     const sql = `INSERT INTO reviews (movie_id, name, text, vote) VALUES (?,?,?,?)`;
 
-    connection.query(sql,[id, name, text, vote],(err, results) => {
+    connection.query(sql, [id, name, text, vote], (err, results) => {
         handleFailedQuery(err, res);
         res.json({
             success: true,
@@ -85,4 +99,4 @@ function imagePathBuilder(image) {
     return `${process.env.APP_URL}:${process.env.APP_PORT}/img/${image}`
 }
 
-module.exports = { index, show, reviewStore};
+module.exports = { index, show, reviewStore };
